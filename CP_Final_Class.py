@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Jun 13 19:52:41 2020
-
-@author: faisa
-"""
 
 class Contact():
     def __init__(self, name=None, no_phone=None, email=None, address=None):
