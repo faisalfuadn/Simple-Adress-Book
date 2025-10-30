@@ -1,242 +1,196 @@
+import csv
+import os
+import re
+from tabulate import tabulate
 
-class Contact():
-    def __init__(self, name=None, no_phone=None, email=None, address=None):
-        self.name=name
-        self.no_phone= no_phone
-        self.email= email
-        self.address= address
-    
-    def add_contact(self, other):
-        if self.name== None:
-            raise Exception('Name cannot empty')
-        if self.no_phone== None:
-            self.no_phone= 'empty'
-        if self.email== None:
-            self.email='empty'
-        if self.address== None:
-            self.address= 'empty'
-        list_contact=[self.name.capitalize(), self.no_phone, self.email, self.address]
-        other.append(list_contact)
-        print ('Contact has been added')
-    
-    def del_contact(self, other, name=None):
-        for i in other:
-            if name.capitalize()== i[0]:
-                other.remove(i)
-                print('Contact has been deleted')
-        if i[0] != name.capitalize():
-                print ('Can not find the contact') 
-            
-    
-    def search_contact(self, other, obj='name', value=None):
-        if obj == 'name':
-            for i in other:
-                if value in i:
-                    print ("Phone Number: {}\n".format(i[1]) +
-                           "Email: {}\n".format(i[2]) +
-                           "Address: {}\n".format(i[3]))
-                    break
-            if i[0] != value:
-                print ('Can not find the contact')
-                
-        elif obj == 'no_phone':
-            for i in other:
-                if value in i:
-                    print ("Name: {}\n".format(i[0]) +
-                           "Email: {}\n".format(i[2]) +
-                           "Address: {}\n".format(i[3]))
-                    break
-            if i[1] != value:
-                print ('Can not find the contact')
-                    
-    def edit_contact(self, other, obj='name', value=None, new_value=None):
-        if obj == 'name':
-            for i in other:
-                old_name=i[0]
-                if value.capitalize() in i:
-                    i[0]= new_value.capitalize()
-                    print ('Successfully edited')
-            if old_name != value.capitalize():
-                print ('Can not find the contact')
-                
-        elif obj == 'no_phone':
-            for i in other:
-                old_name=i[0]
-                if value.capitalize() in i:
-                    i[1]= new_value
-                    print ('Successfully edited')
-            if old_name != value.capitalize():
-                print ('Can not find the contact')
-                
-        elif obj == 'email':
-            for i in other:
-                old_name=i[0]
-                if value.capitalize() in i:
-                    i[2]= new_value
-                    print ('Successfully edited')
-            if old_name != value.capitalize():
-                print ('Can not find the contact')
-        
-        elif obj == 'address':
-            for i in other:
-                old_name=i[0]
-                if value.capitalize() in i:
-                    i[3]= new_value
-                    print ('Successfully edited')
-            if old_name != value.capitalize():
-                print ('Can not find the contact')
-    
-    def reset (self, other):
-        other[:]=other[0]
-        print ('All contact erased')
-    
-    def all_contact(self, other):
-        import numpy as np
-        other=np.array(other[1:])
-        from astropy.table import Table
-        if other.ndim > 1:
-            arr={'name': other[:,0], 'Phone Number': other[:,1], 
-                 'Email': other[:,2], 'Address': other[:,3]}
-            print(Table(arr))
-        else:
-            print('There is no contact in your address book')
-#%%
-def UI():
-    text='''
-                    MAIN MENU
-    
-    =========================================
-    
-    [1] Add a new Contact
-    
-    [2] List all Contacts
-    
-    [3] Search for contact
-    
-    [4] Edit a Contact
-    
-    [5] Delete a Contact
-    
-    [6] Reset All
-    
-    [0] Exit
-    
-    =========================================='''
-    print (text)
-#%%
-def main():
-    import csv
-    import os
-    import numpy as np
-    if os.path.isfile('./Contact.csv') ==  False:
-            with open('Contact.csv', 'w', newline='') as csvfile:
-                header=['Name', 'Phone Number', 'email', 'address']
-                writer = csv.DictWriter(csvfile, fieldnames=header)
+CONTACT_FILE = "Contact.csv"
+
+
+class ContactManager:
+    def __init__(self):
+        self.contacts = []
+        self.load_contacts()
+
+    # ===== FILE HANDLING =====
+    def load_contacts(self):
+        try:
+            if not os.path.exists(CONTACT_FILE):
+                with open(CONTACT_FILE, "w", newline="") as f:
+                    writer = csv.DictWriter(f, fieldnames=["Name", "Phone", "Email", "Address"])
+                    writer.writeheader()
+            with open(CONTACT_FILE, newline="") as f:
+                reader = csv.DictReader(f)
+                self.contacts = list(reader)
+        except Exception as e:
+            print(f"⚠️ Error loading contacts: {e}")
+
+    def save_contacts(self):
+        try:
+            with open(CONTACT_FILE, "w", newline="") as f:
+                writer = csv.DictWriter(f, fieldnames=["Name", "Phone", "Email", "Address"])
                 writer.writeheader()
-            with open('Contact.csv', newline='') as f:
-                reader = csv.reader(f)
-                data=list(reader)      
-    else:
-        with open('Contact.csv', newline='') as f:
-            reader = csv.reader(f)
-            data=list(reader)
-    print('    ===Welcome to Contact Management System===')
-    UI()
-    choice=int(input('Enter the choice: '))
-    while choice !=0:
-        if choice== 1:
-            name=input('Name: ')
-            no_phone=input('Phone number: ')
-            email=input('email: ')
-            address=input('Address: ')
-            new_contact=Contact(name, no_phone, email, address)
-            new_contact.add_contact(data)
-            UI()
-            choice=int(input('Enter the choice: '))
-        elif choice== 2:
-            new_contact=Contact()
-            new_contact.all_contact(data)
-            UI()
-            choice=int(input('Enter the choice: '))
-        elif choice== 3:
-            new_contact=Contact()
-            menu='''
-            [1] Search by Name
-            [2] Search by Phone Number
-            '''
-            print(menu)
-            choice2=int(input('Enter choice: '))
-            if choice2== 1:
-                name=input('Name: ')
-                new_contact.search_contact(data, 'name', name.capitalize())
-            elif choice2== 2:
-                no_phone=input('Phone number: ')
-                new_contact.search_contact(data, 'no_phone', no_phone)
-            else:
-                print('menu is wrong')
-            UI()
-            choice=int(input('Enter the choice: '))
-        
-        elif choice== 4:
-            new_contact=Contact()
-            menu='''
-            [1] Edit Name
-            [2] Edit Phone number
-            [3] Edit Email
-            [4] Edit Address
-            '''
-            print(menu)
-            choice2=int(input('Enter choice: '))
-            if choice2== 1:
-                name=input('Name: ')
-                new_name= input('New Name: ')
-                new_contact.edit_contact(data, 'name', name, new_name)
-            elif choice2== 2:
-                name=input('Name: ')
-                no_phone=input('New Phone number: ')
-                new_contact.edit_contact(data, 'no_phone', name, no_phone)
-            elif choice2== 3:
-                name=input('Name: ')
-                email=input('New email: ')
-                new_contact.edit_contact(data, 'email', name, email)
-            elif choice2== 4:
-                name=input('Name: ')
-                address=input('new Address: ')
-                new_contact.edit_contact(data, 'address', name, address)
-            else:
-                print('menu is wrong')
-            UI()
-            choice=int(input('Enter the choice: '))
-        
-        elif choice==5:
-            name=input('Name: ')
-            new_contact=Contact()
-            new_contact.del_contact(data, name)
-            UI()
-            choice=int(input('Enter the choice: '))
-            
-        elif choice==6:
-            asking= input('Are you sure you want to delect all contact? (y/n) ')
-            if asking.lower()== 'y':
-                new_contact=Contact()
-                new_contact.reset(data)
-            elif asking.lower()== 'n':
-                print('Reset cancelled')
-            UI()
-            choice=int(input('Enter the choice: '))
-    os.remove('Contact.csv')
-    with open('Contact.csv', 'w', newline='') as csvfile:
-        new_data= np.array(data[1:])
-        header=['Name', 'Phone Number', 'email', 'address']
-        writer = csv.DictWriter(csvfile, fieldnames=header)
-        writer.writeheader()
-        if new_data.ndim >1:
-            for i in range(len(new_data)):
-                writer.writerow({header[0]:new_data[i][0],
-                                 header[1]:new_data[i][1],
-                                 header[2]:new_data[i][2],
-                                 header[3]:new_data[i][3]})
+                writer.writerows(self.contacts)
+        except Exception as e:
+            print(f"⚠️ Error saving contacts: {e}")
+
+    # ===== VALIDATION =====
+    @staticmethod
+    def is_valid_email(email):
+        if not email.strip():
+            return True  # allow empty email
+        pattern = r"^[\w\.-]+@[\w\.-]+\.\w+$"
+        return bool(re.match(pattern, email.strip()))
+
+    @staticmethod
+    def is_valid_phone(phone):
+        if not phone.strip():
+            return True  # allow empty phone
+        pattern = r"^\+?\d{7,15}$"  # basic numeric or +countrycode
+        return bool(re.match(pattern, phone.strip()))
+
+    # ===== CORE METHODS =====
+    def add_contact(self, name, phone, email, address):
+        name = name.strip()
+        if not name:
+            print("❌ Name cannot be empty.")
+            return
+        # prevent duplicates (case-insensitive)
+        if any(c["Name"].lower() == name.lower() for c in self.contacts):
+            print("⚠️ Contact already exists.")
+            return
+        if not self.is_valid_phone(phone):
+            print("❌ Invalid phone number format.")
+            return
+        if not self.is_valid_email(email):
+            print("❌ Invalid email format.")
+            return
+
+        self.contacts.append({
+            "Name": name.title(),
+            "Phone": phone.strip() or "empty",
+            "Email": email.strip() or "empty",
+            "Address": address.strip() or "empty",
+        })
+        self.save_contacts()
+        print("✅ Contact added successfully!")
+
+    def list_contacts(self):
+        if not self.contacts:
+            print("No contacts found.")
+            return
+        print(tabulate(self.contacts, headers="keys", tablefmt="grid"))
+
+    def search_contact(self, key, value):
+        value = value.strip().lower()
+        found = [c for c in self.contacts if value in c[key].lower()]
+        if found:
+            print(tabulate(found, headers="keys", tablefmt="grid"))
         else:
-            pass
-if __name__ == '__main__':
+            print("❌ No matching contacts found.")
+
+    def edit_contact(self, name, field, new_value):
+        name = name.strip().lower()
+        for c in self.contacts:
+            if c["Name"].lower() == name:
+                # validation depending on field
+                if field == "Phone" and not self.is_valid_phone(new_value):
+                    print("❌ Invalid phone number format.")
+                    return
+                if field == "Email" and not self.is_valid_email(new_value):
+                    print("❌ Invalid email format.")
+                    return
+                c[field] = new_value.strip().title() if field == "Name" else new_value.strip()
+                self.save_contacts()
+                print(f"✅ {field} updated successfully!")
+                return
+        print("❌ Contact not found.")
+
+    def delete_contact(self, name):
+        name = name.strip().lower()
+        for c in self.contacts:
+            if c["Name"].lower() == name:
+                self.contacts.remove(c)
+                self.save_contacts()
+                print("✅ Contact deleted.")
+                return
+        print("❌ Contact not found.")
+
+    def reset_contacts(self):
+        """Erase all contacts (confirmation handled in UI)."""
+        self.contacts.clear()
+        self.save_contacts()
+        print("✅ All contacts have been erased.")
+
+
+# ===== UI LOOP =====
+def main():
+    cm = ContactManager()
+    print("\n=== Welcome to Contact Management System ===\n")
+
+    menu = """
+    [1] Add Contact
+    [2] List Contacts
+    [3] Search Contact
+    [4] Edit Contact
+    [5] Delete Contact
+    [6] Reset All
+    [0] Exit
+    """
+
+    while True:
+        print(menu)
+        choice = input("Enter your choice: ").strip()
+
+        if choice == "1":
+            name = input("Name: ")
+            phone = input("Phone: ")
+            email = input("Email: ")
+            address = input("Address: ")
+            cm.add_contact(name, phone, email, address)
+
+        elif choice == "2":
+            cm.list_contacts()
+
+        elif choice == "3":
+            print("[1] Search by Name\n[2] Search by Phone")
+            opt = input("Choose option: ")
+            if opt == "1":
+                value = input("Enter part of Name: ")
+                cm.search_contact("Name", value)
+            elif opt == "2":
+                value = input("Enter part of Phone: ")
+                cm.search_contact("Phone", value)
+            else:
+                print("Invalid choice.")
+
+        elif choice == "4":
+            name = input("Enter contact name to edit: ")
+            print("[1] Name\n[2] Phone\n[3] Email\n[4] Address")
+            field_choice = input("Choose field: ")
+            field_map = {"1": "Name", "2": "Phone", "3": "Email", "4": "Address"}
+            if field_choice in field_map:
+                new_value = input(f"Enter new {field_map[field_choice]}: ")
+                cm.edit_contact(name, field_map[field_choice], new_value)
+            else:
+                print("Invalid field choice.")
+
+        elif choice == "5":
+            name = input("Enter Name to delete: ")
+            cm.delete_contact(name)
+
+        elif choice == "6":
+            confirm = input("⚠️  Are you sure you want to delete ALL contacts? (y/n): ")
+            if confirm.lower() == "y":
+                cm.reset_contacts()
+            else:
+                print("Reset cancelled.")
+
+        elif choice == "0":
+            print("👋 Goodbye!")
+            break
+        else:
+            print("❌ Invalid choice. Try again.")
+
+
+if __name__ == "__main__":
     main()
